@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 from bs4 import BeautifulSoup
@@ -8,7 +8,7 @@ from dotenv import dotenv_values, load_dotenv
 
 load_dotenv() 
 
-
+CURRENT_DATE = datetime.today().strftime('%d.%m.20%y')
 CURRENT_YEAR = datetime.today().strftime('20%y')
 BASE_URL = "https://service.stuttgart.de/lhs-services/aws/abfuhrtermine"
 HEADERS = {
@@ -75,6 +75,21 @@ def update_and_save_abfuhrtermine():
     new_data = scrape_abfuhrtermine()
     save_json(new_data)
     print(f"Created new file {FILENAME} with {len(new_data)} entries.")
-    
+
+def check_tomorrow_matches():
+    tomorrow = (datetime.today() + timedelta(days=1)).strftime("%d.%m.%Y")
+
+    with open(FILENAME) as f: 
+        data = json.load(f)
+        matched_types = []
+        for type, dates in data.items():
+            if tomorrow in dates:
+                matched_types.append(type)
+                continue
+    print("Tomorrow is the day for: ", matched_types)
+    return matched_types
+
+
 if __name__ == "__main__":
     update_and_save_abfuhrtermine()
+    check_tomorrow_matches()
